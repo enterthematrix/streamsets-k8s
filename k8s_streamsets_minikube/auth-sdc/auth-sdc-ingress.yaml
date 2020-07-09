@@ -1,0 +1,14 @@
+apiVersion: extensions/v1beta1
+  kind: Ingress
+  metadata:
+    name: auth-sdc
+    namespace: sdc
+  spec:
+    rules:
+    - host: minikube.sdc
+      http:
+        paths:
+        - path: /
+          backend:
+            serviceName: auth-sdc
+            servicePort: 18630

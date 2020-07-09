@@ -1,0 +1,59 @@
+apiVersion: v1
+kind: List
+items:
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    name: auth-sdc
+    namespace: ns2
+    labels:
+      app : my-auth-sdc
+  spec:
+    replicas: 1
+    selector:
+      matchLabels:
+        app: auth-sdc
+    template:
+      metadata:
+        labels:
+          run: auth-sdc
+      spec:
+        containers:
+        - name : authoring-sdc
+          image: streamsets/datacollector:latest
+          ports:
+          - containerPort: 18630
+          env:
+          - name: SDC_CONF_SDC_BASE_HTTP_URL
+            value: https://minikube.sdc
+          - name: SDC_CONF_HTTP_ENABLE_FORWARDED_REQUESTS
+            value: "true"
+- apiVersion: v1
+  kind: Service
+  metadata:
+    name: auth-sdc
+    namespace: ns2
+    labels:
+      app: auth-sdc
+  spec:
+    ports:
+    - name: http
+      port: 18630
+      targetPort: 18630
+      protocol: TCP
+    selector:
+      run: auth-sdc
+- apiVersion: extensions/v1beta1
+  kind: Ingress
+  metadata:
+    name: auth-sdc
+    namespace: ns2
+  spec:
+    rules:
+    - host: minikube.sdc
+      http:
+        paths:
+        - path: /
+          backend:
+            serviceName: authoring-sdc
+            servicePort: 18630
