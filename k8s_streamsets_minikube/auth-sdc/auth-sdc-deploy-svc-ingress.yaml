@@ -5,7 +5,7 @@ items:
   kind: Deployment
   metadata:
     name: auth-sdc
-    namespace: sdc
+    namespace: streamsets
     labels:
       app : auth-sdc
   spec:
@@ -32,7 +32,7 @@ items:
   kind: Service
   metadata:
     name: auth-sdc
-    namespace: sdc
+    namespace: streamsets
     labels:
       app: auth-sdc
   spec:
@@ -47,7 +47,7 @@ items:
   kind: Ingress
   metadata:
     name: auth-sdc
-    namespace: sdc
+    namespace: streamsets
   spec:
     rules:
     - host: minikube.sdc

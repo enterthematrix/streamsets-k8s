@@ -2,7 +2,7 @@ apiVersion: extensions/v1beta1
   kind: Ingress
   metadata:
     name: auth-sdc
-    namespace: sdc
+    namespace: streamsets
   spec:
     rules:
     - host: minikube.sdc

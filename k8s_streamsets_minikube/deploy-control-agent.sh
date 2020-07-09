@@ -5,7 +5,7 @@ SCH_ORG=$SCH_ORG               # Your Control Hub Org
 SCH_URL=$SCH_URL           # If using StreamSets Cloud use https://cloud.streamsets.com
 SCH_USER=$STREAMSETS_AUTOMATION_USER             # should be of the form:  user@org  and have rights to create Provisioning Tokens
 SCH_PASSWORD=$STREAMSETS_AUTOMATION_PASSWORD          # The password for the Control Hub User
-KUBE_NAMESPACE=sdc        # The namespace will be created below
+KUBE_NAMESPACE=streamsets        # The namespace will be created below
 
 ## Get auth token from Control Hub
 SCH_TOKEN=$(curl -s -X POST -d "{\"userName\":\"${SCH_USER}\", \"password\": \"${SCH_PASSWORD}\"}" ${SCH_URL}/security/public-rest/v1/authentication/login --header "Content-Type:application/json" --header "X-Requested-By:SDC" -c - | sed -n '/SS-SSO-LOGIN/p' | perl -lane 'print $F[$#F]')
@@ -48,7 +48,7 @@ kubectl create configmap control-agent-config \
     --from-literal=agent_id=${AGENT_ID}
 
 ## Create a Service Account to run the Control Agent
-kubectl create -f yaml/control-agent-rbac.yaml
+kubectl create -f control_agent_yaml/control-agent-rbac.yaml
 
 ## Deploy the Control Agent
-kubectl create -f yaml/control-agent.yaml
+kubectl create -f control_agent_yaml/control-agent.yaml
