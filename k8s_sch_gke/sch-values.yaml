@@ -1,0 +1,20 @@
+fullnameOverride: sch
+image:
+  repository: streamsets/control-hub
+  tag: 3.16.1
+  pullSecret: myregistrykey
+  pullPolicy: Always
+ingress:
+  proto: http
+  domain: com
+  host: sch-k8s
+  annotations:
+    kubernetes.io/ingress.allow-http: "true"
+    kubernetes.io/ingress.class: traefik
+systemDataCollector:
+  enabled: false
+mysql:
+  enabled: true
+  mysqlRootPassword: root
+  mysqlUser: streamsets
+  mysqlPassword: root
