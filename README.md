@@ -19,5 +19,3 @@ Connect with the [StreamSets Community](https://streamsets.com/community) to dis
 
 If you need help with production systems, you can check out the variety of support options offered on our
 [support page](http://streamsets.com/support).
-
-### Basic Usage
