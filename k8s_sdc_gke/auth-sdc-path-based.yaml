@@ -1,0 +1,79 @@
+apiVersion: v1
+kind: List
+items:
+- apiVersion: v1
+  kind: Service
+  metadata:
+    name: datacollector-service-one
+    namespace: streamsets
+  spec:
+    type: NodePort
+    ports:
+    - name: iot
+      port: 18636
+      targetPort: 18630
+      protocol: TCP
+    selector:
+      app: auth-sdc-317
+- apiVersion: extensions/v1beta1
+  kind: Ingress
+  metadata:
+    name: datacollector-ingress-one
+    namespace: streamsets
+    annotations:
+      kubernetes.io/ingress.class: traefik
+  spec:
+    rules:
+    - host:
+      http:
+        paths:
+        - path: /sdc317(/|$)(.*)
+          backend:
+            serviceName: datacollector-service-one
+            servicePort: 18636
+
+- apiVersion: traefik.containo.us/v1alpha1
+  kind: IngressRoute
+  metadata:
+    name: sdc-1
+    namespace: streamsets
+  spec:
+   entryPoints:
+    - https
+  routes:
+  - match: Host(`sanju-sdc-gke`) && PathPrefix(`/sdc1`)
+    priority: 10
+    kind: Rule
+    services:
+    - name: sdc-1
+      port: 18636
+    middlewares:
+      - name: test-stripprefix
+
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    name: datacollector-deployment-one
+    namespace: streamsets
+  spec:
+    replicas: 1
+    selector:
+      matchLabels:
+        app: auth-sdc-317
+    template:
+      metadata:
+        labels:
+          app: auth-sdc-317
+      spec:
+        containers:
+        - name: datacollector
+          image: streamsets/datacollector:3.17.1
+          ports:
+          - containerPort: 18630
+          env:
+          - name: SDC_CONF_HTTP_ENABLE_FORWARDED_REQUESTS
+            value: "true"
+          - name: SDC_CONF_SDC_BASE_HTTP_URL
+            value: "https://sanju-sdc-gke/sdc1"
+          - name: SDC_CONF_HTTP_ENABLE_FORWARDED_REQUESTS
+            value: true
