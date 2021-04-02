@@ -1,0 +1,100 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: auth-sdc
+spec:
+  selector:
+    matchLabels:
+      app: auth-sdc
+  template:
+    metadata:
+      labels:
+        app: auth-sdc
+    spec:
+      containers:
+      - name: sdc
+        image: streamsets/datacollector:latest
+        ports:
+        - containerPort: 18630
+        env:
+        - name: SDC_JAVA_OPTS
+          value: "-Xmx2g -Xms2g"
+        - name: SDC_CONF
+          value: /opt/streamsets-datacollector-latest/etc
+        - name: SDC_DATA
+          value: /opt/streamsets-datacollector-latest/data
+        - name: SDC_RESOURCES
+          value: /opt/streamsets-datacollector-latest/resources
+        - name: SDC_CONF_SDC_BASE_HTTP_URL
+          value: https://sanju-sdc-gke/sdc/
+        - name: SDC_CONF_HTTP_ENABLE_FORWARDED_REQUESTS
+          value: "true"
+        - name: SDC_VERSION
+          valueFrom:
+            configMapKeyRef:
+              name: sdc-deployment-config
+              key: SDC_VERSION
+        volumeMounts:
+          - name: sdc-stage-libs
+            mountPath: /opt/streamsets-datacollector-latest/streamsets-libs
+          - name: sdc-data
+            mountPath: /opt/streamsets-datacollector-latest/data
+          - name: sdc-etc
+            mountPath: /opt/streamsets-datacollector-latest/etc
+          - name: sdc-resources
+            mountPath: /opt/streamsets-datacollector-latest/resources
+      volumes:
+      - name: sdc-stage-libs
+        persistentVolumeClaim:
+          claimName: sdc-stage-libs-pvc
+      - name: sdc-data
+        persistentVolumeClaim:
+          claimName: sdc-data
+      - name: sdc-etc
+        persistentVolumeClaim:
+          claimName: sdc-etc
+      - name: sdc-resources
+        persistentVolumeClaim:
+          claimName: sdc-resources
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: auth-sdc-svc
+  labels:
+    app: auth-sdc-svc
+spec:
+  type: NodePort
+  ports:
+  - name: http
+    port: 18630
+    targetPort: 18630
+    protocol: TCP
+  selector:
+    app: auth-sdc
+
+---
+
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: sdc
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/ssl-redirect: \"false\"
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+spec:
+  tls:
+  - hosts:
+    - sanju-sdc-gke
+    secretName: sdc-tls
+  rules:
+  - host: sanju-sdc-gke
+    http:
+      paths:
+      - path: /sdc(/|$)(.*)
+        backend:
+          serviceName: auth-sdc-svc
+          servicePort: 18630
