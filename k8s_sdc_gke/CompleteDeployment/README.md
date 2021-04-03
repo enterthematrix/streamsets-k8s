@@ -15,16 +15,20 @@ This script automates creating a GKE cluster with SDC (with all the stage libs)
 
 For minimal interaction with the script, you should set the following environment variables:
 
-SCH_URL (default: https://cloud.streamsets.com)
+1) SCH_URL (default: https://cloud.streamsets.com)
 
-SCH_ORG (default: dpmsupport)
+2) SCH_ORG (default: dpmsupport)
 
-SCH_USER (Your SCH user) ** Please note: https://streamsets.com/documentation/controlhub/latest/help/controlhub/UserGuide/OrganizationSecurity/Authentication.html#concept_nmk_zh3_11b
+3) SCH_USER (Your SCH user) ** Please note: https://streamsets.com/documentation/controlhub/latest/help/controlhub/UserGuide/OrganizationSecurity/Authentication.html#concept_nmk_zh3_11b
 
-SCH_PASSWORD (Your SCH password)
+4) SCH_PASSWORD (Your SCH password)
 
-SDC_DOWNLOAD_USER (default: StreamSets)
+5) SDC_DOWNLOAD_USER (default: StreamSets)
 
-SDC_DOWNLOAD_PASSWORD - Get the latest password @ https://support.streamsets.com/hc/en-us/articles/360046575233-StreamSets-Data-Collector-and-Transformer-Binaries-Download
+6) SDC_DOWNLOAD_PASSWORD - Get the latest password @ https://support.streamsets.com/hc/en-us/articles/360046575233-StreamSets-Data-Collector-and-Transformer-Binaries-Download
 
-INSTALL_TYPE (default: b(basic), specify f for all the stage libraries)
+7) INSTALL_TYPE (default: b(basic), specify f for all the stage libraries)
+
+## CLEANUP
+
+Please make sure to delete the GKE cluster after using. Also, please delete and un-register the SDC
