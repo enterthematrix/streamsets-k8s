@@ -17,16 +17,10 @@ spec:
         ports:
         - containerPort: 18630
         env:
+        - name: SDC_CONF_SDC_BASE_HTTP_URL
+          value: https://sanjeev-auth-sdc/sdc/
         - name: SDC_JAVA_OPTS
           value: "-Xmx2g -Xms2g"
-        - name: SDC_CONF
-          value: /opt/streamsets-datacollector-latest/etc
-        - name: SDC_DATA
-          value: /opt/streamsets-datacollector-latest/data
-        - name: SDC_RESOURCES
-          value: /opt/streamsets-datacollector-latest/resources
-        - name: SDC_CONF_SDC_BASE_HTTP_URL
-          value: https://sanju-sdc-gke/sdc/
         - name: SDC_CONF_HTTP_ENABLE_FORWARDED_REQUESTS
           value: "true"
         - name: SDC_VERSION
@@ -35,27 +29,28 @@ spec:
               name: sdc-deployment-config
               key: SDC_VERSION
         volumeMounts:
-          - name: sdc-stage-libs
-            mountPath: /opt/streamsets-datacollector-latest/streamsets-libs
-          - name: sdc-data
-            mountPath: /opt/streamsets-datacollector-latest/data
-          - name: sdc-etc
-            mountPath: /opt/streamsets-datacollector-latest/etc
-          - name: sdc-resources
-            mountPath: /opt/streamsets-datacollector-latest/resources
+        - name: sdc-id
+          mountPath: /data/sdc.id
+          subPath: sdc.id
+        - name: sdc-auth-token
+          mountPath: /etc/sdc/application-token.txt
+          subPath: application-token.txt
+        - name: dpm-config
+          mountPath: /etc/sdc/dpm.properties
+          subPath: dpm.properties
       volumes:
-      - name: sdc-stage-libs
-        persistentVolumeClaim:
-          claimName: sdc-stage-libs-pvc
-      - name: sdc-data
-        persistentVolumeClaim:
-          claimName: sdc-data
-      - name: sdc-etc
-        persistentVolumeClaim:
-          claimName: sdc-etc
-      - name: sdc-resources
-        persistentVolumeClaim:
-          claimName: sdc-resources
+      - name: sdc-id
+        secret:
+          secretName: sdc-id
+      - name: sdc-auth-token
+        secret:
+          secretName: sdc-auth-token
+      - name: sdc-keystore
+        secret:
+          secretName: sdc-keystore
+      - name: dpm-config
+        configMap:
+          name: dpm-config
 
 ---
 
@@ -88,10 +83,10 @@ metadata:
 spec:
   tls:
   - hosts:
-    - sanju-sdc-gke
+    - sanjeev-auth-sdc
     secretName: sdc-tls
   rules:
-  - host: sanju-sdc-gke
+  - host: sanjeev-auth-sdc
     http:
       paths:
       - path: /sdc(/|$)(.*)

@@ -39,37 +39,16 @@ spec:
             wget --user=$SDC_DOWNLOAD_USER --password="${SDC_DOWNLOAD_PASSWORD}" ${STREAMSETS_DOWNLOAD_URL}/${SDC_VERSION}/tarball/streamsets-datacollector-all-${SDC_VERSION}.tgz;
             tar -xvf streamsets-datacollector-all-${SDC_VERSION}.tgz -C /tmp;
             cp -R /tmp/streamsets-datacollector-${SDC_VERSION}/streamsets-libs/* /streamsets-libs;
-            cp -R /tmp/streamsets-datacollector-${SDC_VERSION}/etc/* /sdc-etc;
-            cp -R /tmp/streamsets-datacollector-${SDC_VERSION}/data/* /sdc-data ;
-            cp -R /tmp/streamsets-datacollector-${SDC_VERSION}/resources/* /sdc-resources;
             rm -rf /streamsets-libs/lost+found;
             rm streamsets-datacollector-all-${SDC_VERSION}.tgz;
             rm -rf /tmp/streamsets-datacollector-${SDC_VERSION};
-            chown -R sdc:sdc /sdc-data;
-            chown -R sdc:sdc /sdc-etc;
-            chown -R sdc:sdc /sdc-resources;
             chown -R sdc:sdc /streamsets-libs;
             sleep 7200;
         volumeMounts:
         - name: sdc-stage-libs-pvc
           mountPath: /streamsets-libs
-        - name: sdc-data
-          mountPath: /sdc-data
-        - name: sdc-etc
-          mountPath: /sdc-etc
-        - name: sdc-resources
-          mountPath: /sdc-resources
       restartPolicy: Never
       volumes:
       - name: sdc-stage-libs-pvc
         persistentVolumeClaim:
           claimName: sdc-stage-libs-pvc
-      - name: sdc-data
-        persistentVolumeClaim:
-          claimName: sdc-data
-      - name: sdc-etc
-        persistentVolumeClaim:
-          claimName: sdc-etc
-      - name: sdc-resources
-        persistentVolumeClaim:
-          claimName: sdc-resources
