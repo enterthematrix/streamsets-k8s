@@ -6,6 +6,10 @@ This script automates creating a GKE cluster with SDC (with all the stage libs)
 
 # GKE cluster specs:
 
+Machine name	   e2-standard-2
+vCPUs            2
+Memory (GB)     8
+
 
 ## Pre-req:
 
@@ -38,7 +42,7 @@ The script provide the options to:
 a)  Delete and un-register a previously created SDC with the same VERSION
 b)  Delete a previously created GKE cluster for the requested VERSION
 
-It's your responsibility to delete the GKE cluster after using. 
+It's your responsibility to delete the GKE cluster after using.
 
 ## Known issues
 
