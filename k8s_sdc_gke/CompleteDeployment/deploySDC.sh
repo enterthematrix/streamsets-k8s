@@ -257,7 +257,7 @@ if [[ "$INSTALL_TYPE" == "f" ]]
 fi
 
 printf "Please wait for the pods to come online................"
-while [ $(kubectl get deployments.apps auth-sdc | awk 'FNR == 2 {print $2}') == "0/1" ]; do
+while [[ $(kubectl get deployments.apps auth-sdc | awk 'FNR == 2 {print $2}') == "0/1" ]]; do
   spinner
 done
 
@@ -284,4 +284,3 @@ printf "\nHit https://$SDC_HOSTNAME/sdc/ in the browser to get started !!"
 rm sdc.crt sdc.key
 log ' $$$ PLEASE REMEMBER TO DELETE THE CLUSTER AFTER USING $$$ '
 printf "gcloud container clusters delete $USER-$KUBE_NAMESPACE\n"
-echo "Script completed: $(date)"
