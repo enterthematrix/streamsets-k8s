@@ -1,8 +1,8 @@
 <img src="/images/readme.png" align="right" />
 
-# Automated script to launch a GKE cluster with SDC
+# Authoring Data Collector on GKE cluster
 
-This script automates creating a GKE cluster with SDC (with all the stage libs)
+This script automates creating a GKE cluster with authoring SDC (with all the stage libs)
 
 # GKE cluster specs:
 
