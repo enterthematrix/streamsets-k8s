@@ -128,6 +128,11 @@ gcloud container clusters create $USER-$KUBE_NAMESPACE \
     --zone=us-central1-c
 printf "$USER-$KUBE_NAMESPACE cluster created  \n"
 
+if [[ $(gcloud container clusters list | grep $USER-$KUBE_NAMESPACE | awk 'FNR == 1 {print $1}') == "" ]]
+  then
+    printf "Failed to create the Kubernetes cluster !! \n"
+    exit 0;
+fi
 # create a namespace to isolate all the resources for this deployment
 kubectl create namespace $KUBE_NAMESPACE
 
@@ -193,6 +198,17 @@ if [[ "$INSTALL_TYPE" == "f" ]]
       #  Run a Job to download all the stagelibs and populate the K8's volume
       kubectl apply -f yaml/sdcDownloadJob.yaml
 
+      # Allow time to create Container
+      while [[ $(kubectl get pods | awk 'FNR == 5 {print $3}') == "ContainerCreating" ]]; do
+        spinner
+      done
+      printf "Please wait for the stage libs to download................"
+      # Wait until the job is completed
+      # stage lib download could fail sometimes potentially due https://github.com/kubernetes/kubernetes/issues/76790
+      while [ $(kubectl get jobs sdc-stage-libs-job | awk 'FNR == 2 {print $2}') == "0/1" ]; do
+        spinner
+      done
+      printf "\n"
       # update DPM specs with SCH URL and DC labels
       sed -i -e  's/sch-url/'"$SCH_HOST"'/' yaml/dpm_ConfigMap.yaml
       sed -i -e  's/auth-sdc/'"$SDC_LABEL"'/' yaml/dpm_ConfigMap.yaml
@@ -214,7 +230,7 @@ if [[ "$INSTALL_TYPE" == "f" ]]
 
       # Reset the specs with the defaults for next run
       sed -i -e  's/'"$SDC_VERSION"'/latest/' yaml/sdcFullDeployment.yaml
-      sed -i -e  's/'"$USER"'-sdc-latest/sanju-auth-sdc/' yaml/sdcDeployment.yaml
+      sed -i -e  's/'"$USER"'-sdc-latest/sanju-auth-sdc/' yaml/sdcFullDeployment.yaml
   else
       # update DPM specs with SCH URL and DC labels
       sed -i -e  's/sch-url/'"$SCH_HOST"'/' yaml/dpm_ConfigMap.yaml
@@ -246,7 +262,7 @@ while [ $(kubectl get deployments.apps auth-sdc | awk 'FNR == 2 {print $2}') == 
 done
 
 # Wait for the LoadBalancer IP to be available
-while [ $(kubectl describe ingress sdc | awk 'FNR == 3 {print $2}' | awk '{print length}') -le 10 ]; do
+while [[ $(kubectl describe ingress sdc | awk 'FNR == 3 {print $2}' | awk '{print length}') -le 10 ]]; do
   spinner
 done
 
@@ -268,3 +284,4 @@ printf "\nHit https://$SDC_HOSTNAME/sdc/ in the browser to get started !!"
 rm sdc.crt sdc.key
 log ' $$$ PLEASE REMEMBER TO DELETE THE CLUSTER AFTER USING $$$ '
 printf "gcloud container clusters delete $USER-$KUBE_NAMESPACE\n"
+echo "Script completed: $(date)"
