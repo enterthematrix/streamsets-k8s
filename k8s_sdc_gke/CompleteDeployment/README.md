@@ -4,6 +4,9 @@
 
 This script automates creating a GKE cluster with SDC (with all the stage libs)
 
+# GKE cluster specs:
+
+
 ## Pre-req:
 
 1) Google CLI -- https://cloud.google.com/sdk/docs/quickstart
@@ -27,8 +30,16 @@ For minimal interaction with the script, you should set the following environmen
 
 6) SDC_DOWNLOAD_PASSWORD - Get the latest password @ https://support.streamsets.com/hc/en-us/articles/360046575233-StreamSets-Data-Collector-and-Transformer-Binaries-Download
 
-7) INSTALL_TYPE (default: b(basic), specify f for all the stage libraries)
+7) INSTALL_TYPE (default: b(basic), specify 'f' to load all stage libraries)
 
 ## CLEANUP
 
-Please make sure to delete the GKE cluster after using. Also, please delete and un-register the SDC
+The script provide the options to:
+a)  Delete and un-register a previously created SDC with the same VERSION
+b)  Delete a previously created GKE cluster for the requested VERSION
+
+It's your responsibility to delete the GKE cluster after using. 
+
+## Known issues
+
+1) When prompted for the password to update the /etc/hosts file, the first attempt fails. Seems there
