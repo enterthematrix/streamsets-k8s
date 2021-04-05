@@ -9,7 +9,7 @@ data:
       dpm.registration.retry.attempts=5
       dpm.security.validationTokenFrequency.secs=60
       dpm.appAuthToken=@application-token.txt@
-      dpm.remote.control.job.labels=sanju_3220
+      dpm.remote.control.job.labels=auth-sdc
       dpm.remote.control.ping.frequency=5000
       dpm.remote.control.events.recipient=jobrunner-app
       dpm.remote.control.process.events.recipients=jobrunner-app,timeseries-app

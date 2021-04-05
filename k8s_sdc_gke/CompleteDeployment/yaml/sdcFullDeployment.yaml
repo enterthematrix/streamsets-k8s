@@ -18,7 +18,7 @@ spec:
         - containerPort: 18630
         env:
         - name: SDC_CONF_SDC_BASE_HTTP_URL
-          value: https://sanjeev-auth-sdc/sdc/
+          value: https://sanju-auth-sdc/sdc/
         - name: SDC_JAVA_OPTS
           value: "-Xmx2g -Xms2g"
         - name: SDC_CONF_HTTP_ENABLE_FORWARDED_REQUESTS
@@ -88,10 +88,10 @@ metadata:
 spec:
   tls:
   - hosts:
-    - sanjeev-auth-sdc
+    - sanju-auth-sdc
     secretName: sdc-tls
   rules:
-  - host: sanjeev-auth-sdc
+  - host: sanju-auth-sdc
     http:
       paths:
       - path: /sdc(/|$)(.*)
