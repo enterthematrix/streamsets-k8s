@@ -20,7 +20,7 @@ spec:
         - name: SDC_CONF_SDC_BASE_HTTP_URL
           value: https://sanju-auth-sdc/sdc/
         - name: SDC_JAVA_OPTS
-          value: "-Xmx2g -Xms2g"
+          value: "-Xmx1g -Xms1g"
         - name: SDC_CONF_HTTP_ENABLE_FORWARDED_REQUESTS
           value: "true"
         - name: SDC_VERSION
