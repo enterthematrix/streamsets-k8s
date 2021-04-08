@@ -10,6 +10,17 @@ SDC_DOWNLOAD_PASSWORD1=$SDC_DOWNLOAD_PASSWORD
 SCH_USER1=$SCH_USER
 
 
+read -p 'SDC VERSION: ' SDC_VERSION
+SDC_VERSION=${SDC_VERSION:-$SDC_VERSION1}
+
+read -p 'SDC LABEL: ' SDC_LABEL
+SDC_LABEL=${SDC_LABEL:-$SDC_LABEL}
+
+read -p 'Need Provisioning Agent? (y/n) [n]: ' PROVISIONING_AGENT
+PROVISIONING_AGENT=${PROVISIONING_AGENT:-n}
+
+read -p 'Installation Type(b -basic | f -full) [b]: ' INSTALL_TYPE
+INSTALL_TYPE=${INSTALL_TYPE:-b}
 
 read -p 'SCH URL[https://cloud.streamsets.com]: ' SCH_URL
 SCH_URL=${SCH_URL:-https://cloud.streamsets.com}
@@ -31,14 +42,8 @@ read -sp 'SDC DOWNLOAD PASSWORD: ' SDC_DOWNLOAD_PASSWORD
 SDC_DOWNLOAD_PASSWORD=${SDC_DOWNLOAD_PASSWORD:-$SDC_DOWNLOAD_PASSWORD1}
 printf "\n"
 
-read -p 'SDC VERSION: ' SDC_VERSION
-SDC_VERSION=${SDC_VERSION:-$SDC_VERSION1}
 
-read -p 'Installation Type(b -basic | f -full) [b]: ' INSTALL_TYPE
-INSTALL_TYPE=${INSTALL_TYPE:-b}
 
-read -p 'SDC LABEL: ' SDC_LABEL
-SDC_LABEL=${SDC_LABEL:-$SDC_LABEL}
 
 SCH_HOST=$(echo "$SCH_URL" | cut -c9-)
 
@@ -53,6 +58,7 @@ else
   SDC_LABEL=${USER}-${KUBE_NAMESPACE}
 fi
 
+echo "SDC_LABEL: ${USER}-${KUBE_NAMESPACE}"
 
 # Some utility functions
 i=1
@@ -85,7 +91,7 @@ fi
 SCH_AUTH_TOKEN=$(curl -s -X POST -d "{\"userName\":\"${SCH_USER}\", \"password\": \"${SCH_PASSWORD}\"}" ${SCH_URL}/security/public-rest/v1/authentication/login --header "Content-Type:application/json" --header "X-Requested-By:SDC" -c - | sed -n '/SS-SSO-LOGIN/p' | perl -lane 'print $F[$#F]')
 
 # check if the requested SDC version already exists
-SDC_ID=$(curl -X GET https://cloud.streamsets.com/jobrunner/rest/v1/sdcs\?executorType\=COLLECTOR\&label\=${USER}-${KUBE_NAMESPACE}\&organization\=${SCH_ORG} --header "Content-Type:application/json" --header "X-Requested-By:SDC" --header "X-SS-REST-CALL:true" --header "X-SS-User-Auth-Token:${SCH_AUTH_TOKEN}" |  jq -r '.[].id')
+SDC_ID=$(curl -X GET ${SCH_URL}/jobrunner/rest/v1/sdcs\?executorType\=COLLECTOR\&label\=${USER}-${KUBE_NAMESPACE}\&organization\=${SCH_ORG} --header "Content-Type:application/json" --header "X-Requested-By:SDC" --header "X-SS-REST-CALL:true" --header "X-SS-User-Auth-Token:${SCH_AUTH_TOKEN}" |  jq -r '.[].id')
 if [ ! $SDC_ID == "" ]; then
   echo "[\"$SDC_ID\"]" > sdc.id
   log 'Requested SDC version already registered with this ControlHub'
@@ -94,9 +100,9 @@ if [ ! $SDC_ID == "" ]; then
     read -p "Do you wish to proceed by? : " yn
     printf "\r"
     case $yn in
-      [Yy]* ) curl -s -X POST -d "@sdc.id"  https://cloud.streamsets.com/security/rest/v1/organization/${SCH_ORG}/components/deactivate --header "Content-Type:application/json" --header "X-Requested-By:SCH" --header "X-SS-REST-CALL:true" --header "X-SS-User-Auth-Token:${SCH_AUTH_TOKEN}"
-              curl -s -X POST -d "@sdc.id"  https://cloud.streamsets.com/security/rest/v1/organization/${SCH_ORG}/components/delete --header "Content-Type:application/json" --header "X-Requested-By:SCH" --header "X-SS-REST-CALL:true" --header "X-SS-User-Auth-Token:${SCH_AUTH_TOKEN}"
-              curl -s -X POST -d "@sdc.id"  https://cloud.streamsets.com/jobrunner/rest/v1/sdcs/delete --header "Content-Type:application/json" --header "X-Requested-By:SCH" --header "X-SS-REST-CALL:true" --header "X-SS-User-Auth-Token:${SCH_AUTH_TOKEN}"
+      [Yy]* ) curl -s -X POST -d "@sdc.id"  ${SCH_URL}/security/rest/v1/organization/${SCH_ORG}/components/deactivate --header "Content-Type:application/json" --header "X-Requested-By:SCH" --header "X-SS-REST-CALL:true" --header "X-SS-User-Auth-Token:${SCH_AUTH_TOKEN}"
+              curl -s -X POST -d "@sdc.id"  ${SCH_URL}/security/rest/v1/organization/${SCH_ORG}/components/delete --header "Content-Type:application/json" --header "X-Requested-By:SCH" --header "X-SS-REST-CALL:true" --header "X-SS-User-Auth-Token:${SCH_AUTH_TOKEN}"
+              curl -s -X POST -d "@sdc.id"  ${SCH_URL}/jobrunner/rest/v1/sdcs/delete --header "Content-Type:application/json" --header "X-Requested-By:SCH" --header "X-SS-REST-CALL:true" --header "X-SS-User-Auth-Token:${SCH_AUTH_TOKEN}"
               printf "SDC \'$SDC_HOSTNAME\' deleted and unregistered from ControlHub\n"
               rm sdc.id
               break;;
@@ -187,6 +193,42 @@ SDC_AUTH_TOKEN=$(curl -s -X PUT -d "{\"organization\": \"${SCH_ORG}\", \"compone
 
 # Store the SDC auth token in a secret
 kubectl create secret generic sdc-auth-token --from-literal=application-token.txt=${SDC_AUTH_TOKEN}
+
+if [ $PROVISIONING_AGENT == "y" ]; then
+
+      ## Use the auth token to get a token for a Control Agent
+      AGENT_TOKEN=$(curl -s -X PUT -d "{\"organization\": \"${SCH_ORG}\", \"componentType\" : \"provisioning-agent\", \"numberOfComponents\" : 1, \"active\" : true}" ${SCH_URL}/security/rest/v1/organization/${SCH_ORG}/components --header "Content-Type:application/json" --header "X-Requested-By:SDC" --header "X-SS-REST-CALL:true" --header "X-SS-User-Auth-Token:${SCH_AUTH_TOKEN}" | jq '.[0].fullAuthToken')
+
+      if [ -z "$AGENT_TOKEN" ]; then
+        echo "Error: Failed to generate control agent token."
+        echo "Please verify you have Provisioning Operator permissions in SCH"
+        exit 1
+      fi
+
+      ## Store the Control Agent token in a secret
+      kubectl create secret generic control-agent-token \
+          --from-literal=dpm_agent_token_string=${AGENT_TOKEN}
+
+      ## Create a secret for the Control Agent to use
+      kubectl create secret generic control-agent-secret
+
+      ## Generate a UUID for the Control Agent
+      AGENT_ID=$(uuidgen)
+
+      ## Store connection properties in a configmap for the Control Agent
+      kubectl create configmap control-agent-config \
+          --from-literal=org=${SCH_ORG} \
+          --from-literal=sch_url=${SCH_URL} \
+          --from-literal=agent_id=${AGENT_ID}
+
+      ## Create a Service Account to run the Control Agent
+      kubectl create -f yaml/control-agent-rbac.yaml
+
+      ## Deploy the Control Agent
+      sed -i -e  's/sanju/'"$USER"'/' yaml/control-agent.yaml
+      kubectl create -f yaml/control-agent.yaml
+      sed -i -e  's/'"$USER"'/sanju/' yaml/control-agent.yaml
+fi
 
 # install NGINX ingress controller
 helm install $KUBE_NAMESPACE stable/nginx-ingress --set rbac.create=true --set controller.publishService.enabled=true --namespace=$KUBE_NAMESPACE
